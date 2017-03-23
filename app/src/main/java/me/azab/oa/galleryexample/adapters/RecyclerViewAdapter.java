@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.util.List;
 
@@ -28,6 +29,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.mContext = mContext;
     }
 
+    public void swap(List<Image> datas){
+        mList.clear();
+        int i = 0;
+        for(Image data : datas){
+            mList.add(data);
+            notifyItemInserted(i++);
+        }
+        notifyDataSetChanged();
+    }
+
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         Context context = parent.getContext();
@@ -44,7 +55,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         Glide.with(mContext)
                 .load(mImage.getUrl())
-                .placeholder(R.drawable.ic_cloud_off)
+                .thumbnail(0.5f)
+                .crossFade()
+                .placeholder(R.drawable.ic_cloud_download)
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(mImageView);
     }
 
