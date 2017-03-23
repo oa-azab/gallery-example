@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import me.azab.oa.galleryexample.adapters.RecyclerViewAdapter;
 import me.azab.oa.galleryexample.models.Image;
+import me.azab.oa.galleryexample.utils.PrefUtils;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     List<Image> mList = new ArrayList<>();
     OkHttpClient mClient = new OkHttpClient();
     String ApiURL = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=cca5c934cb35f3b62ad20ff75b5c3af0&format=json&nojsoncallback=1&extras=url_l&safe_search=for%20safe&per_page=20&tags=bird";
+    final static String LAST_API_RESPONSE = "last_api_response";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
-        //makeApiCall(ApiURL);
+        makeApiCall(ApiURL);
 
         //Check if data set is empty
         checkIfDataSetIsEmpty();
@@ -84,6 +87,35 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
+                Log.d("TAGNOCON","NOO CONNECTION");
+                String lastResponse = PrefUtils.getFromPrefs(getApplication(),LAST_API_RESPONSE,null);
+                if(lastResponse  != null){
+                    // get list of image objects from the response
+                    List<Image> mImages = parseJSON(lastResponse);
+
+                    // clear data set
+                    mList.clear();
+
+                    //add Images to data set
+                    for (Image image : mImages) {
+                        mList.add(image);
+                    }
+                    // Call update ui from UI thread.
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateUI();
+                        }
+                    });
+                }
+                // Stop refreshing state
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                        Toast.makeText(MainActivity.this, "No Internet Connection.", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
@@ -91,13 +123,23 @@ public class MainActivity extends AppCompatActivity {
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
                 }
+                // get response
                 String mResponse = response.body().string();
+
+                // save response to use it later if there are no connection
+                PrefUtils.saveToPrefs(getApplication(),LAST_API_RESPONSE,mResponse);
+
+                // get list of image objects from the response
                 List<Image> mImages = parseJSON(mResponse);
+
+                // clear data set
+                mList.clear();
 
                 //add Images to data set
                 for (Image image : mImages) {
                     mList.add(image);
                 }
+                // Call update ui from UI thread.
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -108,6 +150,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * This method update UI after fetching data from Api
+     *
+     */
     private void updateUI() {
         mRecyclerViewAdapter.notifyDataSetChanged();
         checkIfDataSetIsEmpty();

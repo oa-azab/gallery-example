@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -27,16 +28,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public RecyclerViewAdapter(List<Image> mList, Context mContext) {
         this.mList = mList;
         this.mContext = mContext;
-    }
-
-    public void swap(List<Image> datas){
-        mList.clear();
-        int i = 0;
-        for(Image data : datas){
-            mList.add(data);
-            notifyItemInserted(i++);
-        }
-        notifyDataSetChanged();
     }
 
     @Override
@@ -61,6 +52,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 .centerCrop()
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(mImageView);
+
+        TextView mTextView = holder.mTextView;
+        mTextView.setText(mImage.getTitle());
     }
 
     @Override
@@ -74,11 +68,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public ImageView mImageView;
+        public TextView mTextView;
 
         public MyViewHolder(View itemView) {
 
             super(itemView);
             mImageView = (ImageView) itemView.findViewById(R.id.item_image_view);
+            mTextView = (TextView) itemView.findViewById(R.id.item_text_view);
             itemView.setOnClickListener(this);
         }
 
