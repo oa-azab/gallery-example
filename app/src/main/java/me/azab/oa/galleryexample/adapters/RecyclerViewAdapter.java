@@ -46,7 +46,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         Glide.with(mContext)
                 .load(mImage.getUrl())
-                .thumbnail(0.5f)
+                .thumbnail(0.75f)
                 .crossFade()
                 .placeholder(R.drawable.ic_cloud_download)
                 .centerCrop()

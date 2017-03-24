@@ -70,12 +70,40 @@ public class MainActivity extends AppCompatActivity {
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
-        makeApiCall(ApiURL);
+        // Check whether we're recreating a previously destroyed instance
+        if (savedInstanceState != null) {
+            String lastResponse = PrefUtils.getFromPrefs(getApplication(), LAST_API_RESPONSE, null);
+            if (lastResponse != null) {
+                // get list of image objects from the response
+                List<Image> mImages = parseJSON(lastResponse);
+
+                // clear data set
+                mList.clear();
+
+                //add Images to data set
+                for (Image image : mImages) {
+                    mList.add(image);
+                }
+                // Call update ui from UI thread.
+                updateUI();
+            }else{
+                makeApiCall(ApiURL);
+            }
+        } else {
+            // Probably initialize members with default values for a new instance
+            makeApiCall(ApiURL);
+        }
 
         //Check if data set is empty
         checkIfDataSetIsEmpty();
     }
 
+    /**
+     * This Method make api request and then update the UI
+     * if there are no connection it UI with last response
+     *
+     * @param url url of API rquest
+     */
     public void makeApiCall(String url) {
         // build request
         Request mRequest = new Request.Builder()
@@ -87,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
-                Log.d("TAGNOCON","NOO CONNECTION");
-                String lastResponse = PrefUtils.getFromPrefs(getApplication(),LAST_API_RESPONSE,null);
-                if(lastResponse  != null){
+                Log.d("TAGNOCON", "NOO CONNECTION");
+                String lastResponse = PrefUtils.getFromPrefs(getApplication(), LAST_API_RESPONSE, null);
+                if (lastResponse != null) {
                     // get list of image objects from the response
                     List<Image> mImages = parseJSON(lastResponse);
 
@@ -127,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
                 String mResponse = response.body().string();
 
                 // save response to use it later if there are no connection
-                PrefUtils.saveToPrefs(getApplication(),LAST_API_RESPONSE,mResponse);
+                PrefUtils.saveToPrefs(getApplication(), LAST_API_RESPONSE, mResponse);
 
                 // get list of image objects from the response
                 List<Image> mImages = parseJSON(mResponse);
@@ -152,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * This method update UI after fetching data from Api
-     *
      */
     private void updateUI() {
         mRecyclerViewAdapter.notifyDataSetChanged();
